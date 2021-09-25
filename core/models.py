@@ -49,6 +49,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = 'email'
 
 
+
+
+
 class Category(models.Model):
     """Model for Category object"""
 
