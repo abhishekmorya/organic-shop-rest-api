@@ -1,6 +1,8 @@
+from core.models import UserAddress
 from rest_framework import generics, permissions, authentication
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.settings import api_settings
+from rest_framework import viewsets
 
 from user import serializers
 
@@ -29,3 +31,21 @@ class RetrieveUpdateUserView(generics.RetrieveUpdateAPIView):
         """Retrieve and return authenticated user"""
 
         return self.request.user
+
+
+class UserAddressView(viewsets.ModelViewSet):
+    """Viewset for UserAddress object"""
+
+    serializer_class = serializers.UserAddressSerializer
+    authentication_classes = [authentication.TokenAuthentication,]
+    permission_classes = [permissions.IsAuthenticated,]
+    queryset = UserAddress.objects.all()
+
+    def get_queryset(self):
+        
+        return self.queryset.filter(
+            user = self.request.user
+        )
+    
+    def perform_create(self, serializer):
+        return serializer.save(user = self.request.user)

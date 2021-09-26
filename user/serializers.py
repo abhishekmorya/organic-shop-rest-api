@@ -1,5 +1,8 @@
 from django.contrib.auth import get_user_model, authenticate
+from django.db.models import fields
 from rest_framework import serializers
+
+from core import models
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -61,3 +64,22 @@ class UserTokenSerializer(serializers.Serializer):
 
         attr['user'] = user
         return attr
+
+
+class UserAddressSerializer(serializers.ModelSerializer):
+    """Serializer class for UserAddress object"""
+
+    class Meta:
+        model = models.UserAddress
+        fields = (
+            'id',
+            'name',
+            'line1',
+            'line2',
+            'city',
+            'district',
+            'state',
+            'pincode',
+            'addressType',
+        )
+        read_only_fields = ('id',)

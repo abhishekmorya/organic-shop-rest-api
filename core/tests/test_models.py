@@ -1,6 +1,16 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 
+from core import models
+
+
+def sample_user(email='test_user@gmail.com', password='testpassword'):
+    return get_user_model().objects.create_user(
+        email=email,
+        password=password,
+        is_staff=True
+    )
+
 
 class ModelTest(TestCase):
     """Test class for models"""
@@ -12,8 +22,8 @@ class ModelTest(TestCase):
         password = 'testpassword'
 
         user = get_user_model().objects.create_user(
-            email = email,
-            password = password
+            email=email,
+            password=password
         )
 
         self.assertEqual(user.email, email)
@@ -25,8 +35,8 @@ class ModelTest(TestCase):
         email = "abhishek@GMAIL.COM"
         password = 'testpassword'
         user = get_user_model().objects.create_user(
-            email = email,
-            password = password
+            email=email,
+            password=password
         )
 
         self.assertEqual(user.email, email.lower())
@@ -36,8 +46,8 @@ class ModelTest(TestCase):
 
         with self.assertRaises(ValueError):
             get_user_model().objects.create_user(
-                email = None, 
-                password = 'Testpassword'
+                email=None,
+                password='Testpassword'
             )
 
     def test_create_new_superuser(self):
@@ -47,11 +57,34 @@ class ModelTest(TestCase):
         password = 'testpassword'
 
         user = get_user_model().objects.create_superuser(
-            email = email,
-            password = password
+            email=email,
+            password=password
         )
 
         self.assertTrue(user.is_staff)
         self.assertTrue(user.is_superuser)
 
-    
+    def test_address_str(self):
+        """Test the address string representation"""
+        user = sample_user()
+
+        payload = {
+            "name": "Name",
+            "line1": "Line1",
+            "line2": "Line2",
+            "city": "City Name",
+            "district": "Disctict Name",
+            "state": "State",
+            "pincode": "123456",
+            "addressType": 1
+        }
+        address = models.UserAddress.objects.create(user = user, **payload)
+
+        self.assertEqual(str(address), 
+            'name: {}, district: {}, state: {}, pincode: {}'.format(
+                address.name,
+                address.district,
+                address.state,
+                address.pincode
+            )
+        )
