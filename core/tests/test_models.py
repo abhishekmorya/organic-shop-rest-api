@@ -1,14 +1,17 @@
+from product.tests.test_category_api import sample_category
 from django.test import TestCase
 from django.contrib.auth import get_user_model
+from django.db import utils
+from django.core.exceptions import ValidationError
 
 from core import models
 
 
-def sample_user(email='test_user@gmail.com', password='testpassword'):
+def sample_user(email='test_user@gmail.com', password='testpassword', is_staff = True):
     return get_user_model().objects.create_user(
         email=email,
         password=password,
-        is_staff=True
+        is_staff=is_staff
     )
 
 
@@ -76,7 +79,7 @@ class ModelTest(TestCase):
             "district": "Disctict Name",
             "state": "State",
             "pincode": "123456",
-            "addressType": 1
+            "addressType": models.UserAddress.HOME
         }
         address = models.UserAddress.objects.create(user = user, **payload)
 
@@ -88,3 +91,42 @@ class ModelTest(TestCase):
                 address.pincode
             )
         )
+    
+    def test_category_str(self):
+        """Test the string representation of category object"""
+        user = sample_user()
+        payload = {
+            'name': 'Category',
+            'desc': "Category desc"
+        }
+
+        category = models.Category.objects.create(user = user, **payload)
+        self.assertEqual(str(category), payload['name'])
+
+    def test_unique_categories(self):
+        """Test no duplicate categories are created"""
+        user = sample_user()
+        models.Category.objects.create(user = user, name = 'Category')
+        # models.Category.objects.create(user = user, name = 'Category')
+
+        with self.assertRaises(utils.IntegrityError):
+            models.Category.objects.create(user = user, name = 'Category')
+
+    def test_product_str(self):
+        """Test the string representation of product object"""
+
+        user = sample_user()
+        category = sample_category(user = user)
+        payload = {
+            'category': category,
+            'title': 'Brown Bread',
+            'desc': 'Healthy Brown bread',
+            'price': 23.00,
+            'quantity': 5,
+            'unit': models.Product.UNIT,
+            'image': 'image url'
+        }
+
+        product = models.Product.objects.create(user = user, **payload)
+
+        self.assertEqual(str(product), payload['title'])

@@ -1,10 +1,18 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import PermissionsMixin, BaseUserManager, AbstractBaseUser
 from django.core.validators import MinValueValidator
+from django.core.exceptions import ValidationError
+
+import re
+
 from django.db import models
 from django.conf import settings
-from rest_framework.compat import MaxValueValidator
 
+def validate_pincode(value):
+    """Validates the pincode for 6 digits and first non-zero digit"""
+    regex = "^[1-9]{1}[0-9]{5}$"
+    if not bool(re.search(regex, value)):
+        raise ValidationError('Invalid pincode')
 
 class UserManager(BaseUserManager):
     """
@@ -52,6 +60,18 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 
 class UserAddress(models.Model):
+    """Model for Address object"""
+
+    HOME = 0
+    WORK = 1
+    OTHER = 2
+
+    ADDRESS_TYPE_CHOICES = (
+        (HOME, 'Home'),
+        (WORK, 'Work'),
+        (OTHER, 'Other'),
+    )
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE
@@ -62,9 +82,11 @@ class UserAddress(models.Model):
     city = models.CharField(max_length=100, blank=False)
     district = models.CharField(max_length=100, blank=False)
     state = models.CharField(max_length=100, blank=False)
-    pincode = models.CharField(max_length=6, blank=False)
+    pincode = models.CharField(max_length = 6, blank=False,
+        validators=[validate_pincode,]
+    )
     addressType = models.IntegerField(
-        default=0, validators=[MinValueValidator(0), MaxValueValidator(2)])
+        default=HOME, choices=ADDRESS_TYPE_CHOICES)
 
     def __str__(self):
         return f'name: {self.name}, district: {self.district}, state: {self.state}, pincode: {self.pincode}'
@@ -75,10 +97,52 @@ class Category(models.Model):
 
     name = models.CharField(max_length=255, unique=True)
     desc = models.CharField(max_length=255)
+    created_date = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE
     )
 
     def __str__(self):
-        return f"name: {self.name}, desc: {self.desc}"
+        return f"{self.name}"
+
+
+class Product(models.Model):
+    """Model for Product object"""
+
+    UNIT = 0
+    KG = 1
+    LTR = 2
+    GM = 3
+
+    UNIT_CHOICES = (
+        (UNIT, 'unit'),
+        (KG, 'kg'),
+        (LTR, 'ltr'),
+        (GM, 'g'),
+    )
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
+    )
+    title = models.CharField(max_length=255, blank=False)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    desc = models.CharField(max_length=255)
+    created_date = models.DateTimeField(auto_now_add=True)
+    price = models.FloatField(
+        blank=False,
+        validators=[MinValueValidator(0.00)]
+    )
+    quantity = models.IntegerField(
+        blank=False,
+        validators=[MinValueValidator(1)]
+    )
+    unit = models.IntegerField(choices=UNIT_CHOICES, default=UNIT)
+    image = models.ImageField(blank = True)
+
+    def __str__(self):
+        """String representation of Product object"""
+        return self.title
+
+

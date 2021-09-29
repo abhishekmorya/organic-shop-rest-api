@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from user.serializers import UserAddressSerializer
 from django.test import TestCase
 from django.contrib.auth import get_user_model
@@ -63,7 +64,7 @@ class PrivateUserAddressTests(TestCase):
         sample_address(self.user)
 
         res = self.client.get(ADDRESS_URL)
-        addresses = UserAddress.objects.all()
+        addresses = UserAddress.objects.all().order_by('-id')
         serializer = UserAddressSerializer(addresses, many = True)
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
@@ -150,7 +151,6 @@ class PrivateUserAddressTests(TestCase):
         }
         res = self.client.patch(url, payload)
         address.refresh_from_db()
-        # self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(address.name, payload['name'])
         self.assertEqual(address.city, payload['city'])
 
@@ -175,3 +175,18 @@ class PrivateUserAddressTests(TestCase):
 
         for key in payload.keys():
             self.assertEqual(payload[key], getattr(address, key))
+
+    def test_invalid_pincode(self):
+        """Test if invalid pincode provided to create or update"""
+        payload = {
+            "name": "Name",
+            "line1": "Line1",
+            "line2": "Line2",
+            "city": "City Name",
+            "district": "Disctict Name",
+            "state": "State",
+            "pincode": "123",
+            "addressType": UserAddress.HOME
+        }
+        res = self.client.post(ADDRESS_URL, payload)
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
