@@ -1,10 +1,16 @@
+import os
 from django.http import HttpResponse
+from django.conf import settings
 
-from rest_framework import viewsets, authentication
+from rest_framework import status, viewsets, authentication
+from rest_framework.decorators import action
+from rest_framework.response import Response
 
 from core import permissions
 from core import models
 from product import serializers
+
+from PIL import Image
 
 def greet(request):
     """Greet message"""
@@ -37,6 +43,7 @@ class ProductView(viewsets.ModelViewSet):
         """Customized queryset for filtering by category feature"""
         cates = self.request.query_params.get('categories')
         queryset = self.queryset.all().order_by('id')
+        # print(self.request.session.get())
         if cates:
             categories = [int(c) for c in cates.split(',')]
             queryset = models.Product.objects.filter(category__in = categories)
@@ -46,4 +53,31 @@ class ProductView(viewsets.ModelViewSet):
         """Return detail serializer for retrieve action"""
         if self.action == 'retrieve':
             return serializers.ProductDetailSerializer
+        if self.action == 'upload_image':
+            return serializers.ProductImageSerializer
         return self.serializer_class
+
+    @action(methods = ['POST'], detail = True, url_path='upload-image')
+    def upload_image(self, request, pk = None):
+        """Upload image to product"""
+        product = self.get_object()
+        serializer = self.get_serializer(
+            product,
+            data = request.data
+        )
+
+        if serializer.is_valid():
+            image = self.queryset.get(pk = product.id).image
+            if image:
+                old_image_path = os.path.join(settings.MEDIA_ROOT, image.path)
+                os.remove(old_image_path)
+            serializer.save()
+            return Response(
+                serializer.data,
+                status = status.HTTP_200_OK 
+            )
+        
+        return Response(
+            serializer.errors,
+            status = status.HTTP_400_BAD_REQUEST 
+        )

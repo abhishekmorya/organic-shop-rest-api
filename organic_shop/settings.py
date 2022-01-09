@@ -130,4 +130,8 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+MEDIA_URL = '/media/'
+
+MEDIA_ROOT = os.path.join('C:\\Users\\dell\\Documents\\organic-shop\\', 'media')
+
 AUTH_USER_MODEL = 'core.User'

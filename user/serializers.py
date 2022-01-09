@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model, authenticate
-from django.db.models import fields
 from rest_framework import serializers
+from django.conf import settings
 
 from core import models
 
@@ -83,3 +83,11 @@ class UserAddressSerializer(serializers.ModelSerializer):
             'addressType',
         )
         read_only_fields = ('id',)
+
+
+class UserDetailsSerializer(serializers.ModelSerializer):
+    """Serializer class for UserDetails object"""
+
+    class Meta:
+        model = models.UserDetails
+        fields = ('selectedAddress',)

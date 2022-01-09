@@ -1,5 +1,5 @@
-from core.models import UserAddress
-from rest_framework import generics, permissions, authentication
+from core.models import UserAddress, UserDetails
+from rest_framework import generics, mixins, permissions, authentication
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.settings import api_settings
 from rest_framework import viewsets
@@ -48,4 +48,25 @@ class UserAddressView(viewsets.ModelViewSet):
         )
     
     def perform_create(self, serializer):
+        return serializer.save(user = self.request.user)
+
+
+class UserDetailsView(viewsets.GenericViewSet,
+                    mixins.CreateModelMixin,
+                    mixins.UpdateModelMixin,
+                    mixins.RetrieveModelMixin,
+                    mixins.ListModelMixin):
+    """Viewset for UserDetails viewset"""
+    serializer_class = serializers.UserDetailsSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+    authentication_classes = (authentication.TokenAuthentication,)
+    queryset = UserDetails.objects.all()
+
+    def get_queryset(self):
+        return self.queryset.filter(
+            user = self.request.user
+        )
+
+    def perform_create(self, serializer):
+        
         return serializer.save(user = self.request.user)

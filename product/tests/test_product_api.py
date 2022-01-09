@@ -1,4 +1,6 @@
-import product
+import tempfile, os
+from PIL import Image
+
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.urls import reverse
@@ -16,6 +18,9 @@ def detail_url(product_id):
     """Returns the details url for product"""
     return reverse('product:product-detail', args=[product_id])
 
+def product_upload_url(product_id):
+    """Return url for product image upload"""
+    return reverse('product:product-upload-image', args=[product_id])
 
 def sample_user(email='test_user@gmail.com', password='testpassword', is_staff=True):
     """Create and return admin user"""
@@ -105,7 +110,7 @@ class TestPrivateProductApi(TestCase):
         sample_product(user=self.user, category=category)
         res = self.client.get(PRODUCT_URL)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
-        products = Product.objects.all().order_by('-id')
+        products = Product.objects.all().order_by('id')
         serializer = ProductSerializer(products, many=True)
 
         self.assertEqual(res.data, serializer.data)
@@ -171,14 +176,6 @@ class TestPrivateProductApi(TestCase):
     def test_delete_by_admin_successful(self):
         """Test the delete action by admin"""
         category = sample_category(user=self.user)
-        payload = {
-            "title": "Banana",
-            "desc": "Banana desc",
-            "category": category.id,
-            "price": 20.00,
-            "quantity": 12,
-            "unit": 0
-        }
         product1 = sample_product(user=self.user, category=category)
         pid = product1.id
         url = detail_url(product_id=pid)
@@ -192,8 +189,8 @@ class TestPrivateProductApi(TestCase):
         category1 = sample_category(user=self.user, name='Cat 1')
         category2 = sample_category(user=self.user, name='Cat 2')
         category3 = sample_category(user=self.user, name='Cat 3')
-        product1 = sample_product(user=self.user, category=category1)
-        product2 = sample_product(user=self.user, category=category2, title='Product2',
+        sample_product(user=self.user, category=category1)
+        sample_product(user=self.user, category=category2, title='Product2',
                                   desc='Product2', price=20.00, quantity=2, unit=Product.KG)
         product3 = sample_product(user=self.user, category=category3, title='Product3',
                                   desc='Product3', price=10.00, quantity=5, unit=Product.LTR)
@@ -206,3 +203,62 @@ class TestPrivateProductApi(TestCase):
         serializer = ProductSerializer(products, many = True)
         self.assertEqual(res.data, serializer.data)
         self.assertNotIn(product3, res.data)
+
+
+class ProductImageUploadTest(TestCase):
+    """Test the image upload to Product object api"""
+
+    def setUp(self):
+        """Initial setup for test cases"""
+        self.client = APIClient()
+        self.user = sample_user()
+        self.client.force_authenticate(self.user)
+        category = sample_category(user = self.user)
+        self.product = sample_product(user = self.user, category = category)
+
+    def tearDown(self) -> None:
+        self.product.image.delete()
+
+    def test_upload_image_to_product(self):
+        """Test uploading image to a product"""
+        url = product_upload_url(self.product.id)
+        with tempfile.NamedTemporaryFile(suffix='.jpg') as ntf:
+            img = Image.new('RGB', size=(10,10))
+            img.save(ntf, 'JPEG')
+            ntf.seek(0)
+            res = self.client.post(url, {'image': ntf}, format = 'multipart')
+
+        self.product.refresh_from_db()
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertIn('image', res.data)
+        self.assertTrue(os.path.exists(self.product.image.path))
+
+    def test_delete_old_image_while_uploading_new(self):
+        """Test delete the old image of a product while uploading new one"""
+        url = product_upload_url(self.product.id)
+        with tempfile.NamedTemporaryFile(suffix='.jpg') as ntf:
+            img = Image.new('RGB', size = (100, 100))
+            img.save(ntf, 'JPEG')
+            ntf.seek(0)
+            res = self.client.post(url, {'image': ntf}, format = 'multipart')
+        
+        self.product.refresh_from_db()
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertTrue(os.path.exists(self.product.image.path))
+        old_file_path = self.product.image.path
+        with tempfile.NamedTemporaryFile(suffix='.jpg') as ntf:
+            img = Image.new('RGB', size = (100, 100))
+            img.save(ntf, 'JPEG')
+            ntf.seek(0)
+            res = self.client.post(url, {'image': ntf}, format = 'multipart')
+        self.product.refresh_from_db()
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertTrue(os.path.exists(self.product.image.path))
+        self.assertFalse(os.path.exists(old_file_path))
+
+
+    def test_upload_image_bad_request(self):
+        """Test uploading invalid image to product"""
+        url = product_upload_url(self.product.id)
+        res = self.client.post(url, {'image': 'nonimage'}, format = 'multipart')
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)

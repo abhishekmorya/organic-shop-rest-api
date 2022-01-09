@@ -6,6 +6,7 @@ app_name = 'user'
 
 router = DefaultRouter()
 router.register('address', views.UserAddressView, base_name='address')
+router.register('user-details', views.UserDetailsView, base_name='user-details')
 
 urlpatterns = [
     path('create/', views.CreateUserView.as_view(), name = 'create'),
