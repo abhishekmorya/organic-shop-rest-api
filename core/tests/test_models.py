@@ -209,19 +209,18 @@ class ModelTest(TestCase):
 
         self.assertEqual(str(user_details.selectedAddress), str(address2))
 
-    def test_creating_shopping_cart(self):
+    def test_shopping_cart_str(self):
         """Test string representation of Shopping Cart Object"""
         user = sample_user()
         product = sample_product(user)
-        count = 2
 
         payload = {
-            'count': count
+            'product': product,
+            'count': 2
         }
         shoppingCart = models.ShoppingCart.objects.create(user = user, **payload)
-        shoppingCart.products.add(product)
         count = models.ShoppingCart.objects.count()
-        self.assertEqual(count, 1)
+        self.assertEqual(f"{str(product)}, {payload['count']}", str(shoppingCart))
         
 
     def test_payment_mode_str(self):
@@ -268,6 +267,7 @@ class ModelTest(TestCase):
         order = models.Order.objects.create(user = user, **payload)
 
         product1 = sample_product(user)
+        sc1 = models.ShoppingCart.objects.create(user = user, product = product1, count = 4)
         product_payload = {
             'category': sample_category(user, name = 'Sauce'),
             'title': 'Jam',
@@ -278,7 +278,8 @@ class ModelTest(TestCase):
             'image': 'image url'
         }
         product2 = sample_product(user, **product_payload)
-        order.products.add(product1, product2)
+        sc2 = models.ShoppingCart.objects.create(user = user, product = product2, count = 3)
+        order.cartItems.add(sc1, sc2)
         offer = models.Offer.objects.create(
             title = 'Summer Sale',
             percentage = 20.5,
@@ -288,7 +289,7 @@ class ModelTest(TestCase):
         order.offers_applied.add(offer)
         count = models.Order.objects.count()
         self.assertEqual(count, 1)
-        self.assertEqual(order.products.count(), 2)
+        self.assertEqual(order.cartItems.count(), 2)
         self.assertEqual(order.offers_applied.count(), 1)
 
     def test_creating_price_detail(self):
@@ -311,6 +312,7 @@ class ModelTest(TestCase):
         }
         order = models.Order.objects.create(user = user, **order_payload)
         product1 = sample_product(user)
+        sc1 = models.ShoppingCart.objects.create(user = user, product = product1, count = 4)
         product_payload = {
             'category': sample_category(user, name = 'Sauce'),
             'title': 'Jam',
@@ -321,7 +323,8 @@ class ModelTest(TestCase):
             'image': 'image url'
         }
         product2 = sample_product(user, **product_payload)
-        order.products.add(product1, product2)
+        sc2 = models.ShoppingCart.objects.create(user = user, product = product2, count = 3)
+        order.cartItems.add(sc1, sc2)
         offer = models.Offer.objects.create(
             title = 'Summer Sale',
             percentage = 20.5,

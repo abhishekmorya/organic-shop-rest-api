@@ -37,13 +37,14 @@ class ProductView(viewsets.ModelViewSet):
     queryset = models.Product.objects.all().order_by('id')
 
     def perform_create(self, serializer):
+        # self.request.session['username'] = self.request.user.get_email_field_name()
         return serializer.save(user = self.request.user)
 
     def get_queryset(self):
         """Customized queryset for filtering by category feature"""
         cates = self.request.query_params.get('categories')
         queryset = self.queryset.all().order_by('id')
-        # print(self.request.session.get())
+        # print(self.request.session.items())
         if cates:
             categories = [int(c) for c in cates.split(',')]
             queryset = models.Product.objects.filter(category__in = categories)

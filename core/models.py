@@ -183,8 +183,12 @@ class ShoppingCart(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE
     )
-    products = models.ManyToManyField(Product)
+    product = models.ForeignKey(Product, on_delete=models.PROTECT)
     count = models.IntegerField(blank=False, validators=[MinValueValidator(1)])
+
+    def __str__(self):
+        """String representation of Shopping Cart"""
+        return f'{str(self.product)}, {self.count}'
 
 
 class PaymentMode(models.Model):
@@ -219,7 +223,7 @@ class Order(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE
     )
-    products = ManyToManyField(Product)
+    cartItems = ManyToManyField(ShoppingCart)
     offers_applied = models.ManyToManyField(Offer)
     ordered_on = models.DateTimeField(auto_now_add=True)
     shipping_address = models.CharField(max_length=255)
