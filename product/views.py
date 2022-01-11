@@ -44,7 +44,7 @@ class ProductView(viewsets.ModelViewSet):
         """Customized queryset for filtering by category feature"""
         cates = self.request.query_params.get('categories')
         queryset = self.queryset.all().order_by('id')
-        # print(self.request.session.items())
+        # print('session_key: ' + self.request.session.session_key)
         if cates:
             categories = [int(c) for c in cates.split(',')]
             queryset = models.Product.objects.filter(category__in = categories)

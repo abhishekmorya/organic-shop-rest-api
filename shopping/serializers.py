@@ -1,4 +1,6 @@
+from django.db.models import fields
 from rest_framework.serializers import ModelSerializer
+from django.contrib.sessions.backends.db import SessionStore
 
 from core import models
 from product.serializers import ProductDetailSerializer
@@ -16,5 +18,18 @@ class ShoppingSerializer(ModelSerializer):
 
 class ShoppingDetailSerializer(ShoppingSerializer):
     """Serializer for detailed shopping cart"""
+
+    product = ProductDetailSerializer(read_only = True)
+
+class SessionShoppingSerializer(ModelSerializer):
+    """Serializer for Session objects of shopping cart"""
+
+    class Meta:
+        model = models.SessionShoppingCart
+        fields = ('id', 'product', 'count')
+        read_only_fields = ('id', )
+
+class SessionShoppingDetailSerializer(SessionShoppingSerializer):
+    """Serializer for detail Session Shopping cart"""
 
     product = ProductDetailSerializer(read_only = True)

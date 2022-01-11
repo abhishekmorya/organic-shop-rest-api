@@ -6,13 +6,19 @@ from rest_framework.test import APIClient
 from rest_framework import status
 
 from core import models
-from shopping.serializers import ShoppingDetailSerializer, ShoppingSerializer
+from shopping import serializers
+from shopping.serializers import SessionShoppingSerializer, ShoppingDetailSerializer, ShoppingSerializer
 
 SHOPPING_URL = reverse('shopping:shopping-list')
+SESSION_SHOPPING_URL = reverse('shopping:aUser-list')
 
 def detail_url(shopping_id):
     """Returns the detailed url for shopping cart"""
     return reverse('shopping:shopping-detail', args=[shopping_id])
+
+def detail_url_session(shopping_id):
+    """Returns the detailed url for shopping session cart"""
+    return reverse('shopping:aUser-detail', args=[shopping_id])
 
 def sample_user(email = 'testuser@gmail.com', password = 'testuser', is_staff = True):
     """Create sample user"""
@@ -52,6 +58,14 @@ def sample_shopping_item(user, product, count = 2):
     }
     return models.ShoppingCart.objects.create(user = user, **payload)
 
+def sample_shopping_session_item(session_key, product, count = 2):
+    """Create sample cart item for anonymous user"""
+    payload = {
+        'product': product,
+        'count': count
+    }
+    return models.SessionShoppingCart.objects.create(aUser = session_key, **payload)
+
 
 class TestPublicShoppingAPI(TestCase):
     """Test the shopping cart api for unauthorized users"""
@@ -59,6 +73,10 @@ class TestPublicShoppingAPI(TestCase):
     def setUp(self):
         """Set Up attributes for Testing"""
         self.client = APIClient()
+        self.session_key = self.client.session.session_key
+        self.user = sample_user()
+        self.category = sample_category(self.user)
+        self.product = sample_product(self.user, self.category)
 
     def test_retrieving_shopping_cart(self):
         """Test the fetching cart details for unauthorised user"""
@@ -67,14 +85,81 @@ class TestPublicShoppingAPI(TestCase):
 
     def test_unauthorized_post(self):
         """Test the post request from unauthorised user"""
-        user = sample_user()
-        category = sample_category(user)
         payload = {
-            'product': sample_product(user, category),
+            'product': sample_product(self.user, self.category),
             'count': 2
         }
         res = self.client.post(SHOPPING_URL, payload)
         self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_retrieving_shopping_cart_from_session(self):
+        """Test shopping cart retrieving for not logged in user from session"""
+        sample_shopping_session_item(self.session_key, self.product)
+        res = self.client.get(SESSION_SHOPPING_URL)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        cartItems = models.SessionShoppingCart.objects.all().order_by('id')
+        serializer = SessionShoppingSerializer(cartItems, many = True)
+        self.assertEqual(res.data, serializer.data)
+
+    def test_retrieving_shopping_cart_for_same_session(self):
+        """Test shopping cart for multiple sessions"""
+        session = self.client.session
+        sample_shopping_session_item(self.session_key, self.product)
+        session.create()
+        session_key2 = session.session_key
+        product2 = sample_product(self.user, self.category, title = 'Product2')
+        sample_shopping_session_item(session_key2, product2, count  = 1)
+
+        res = self.client.get(SESSION_SHOPPING_URL)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        cartItems = models.SessionShoppingCart.objects.filter(aUser = self.session_key)
+        serializer = serializers.SessionShoppingSerializer(cartItems, many = True)
+        self.assertEqual(len(res.data), 1)
+        self.assertEqual(res.data, serializer.data)
+
+    def test_shopping_session_retrieve_detail_data(self):
+        """Test retrieve detailed data of session shopping cart"""
+        item = sample_shopping_session_item(self.session_key, self.product)
+        url = detail_url_session(shopping_id = item.id)
+        res = self.client.get(url)
+        cartItem = models.SessionShoppingCart.objects.get(id = item.id)
+        serializer = serializers.SessionShoppingDetailSerializer(cartItem)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data, serializer.data)
+
+    def test_create_shopping_session_cart_item(self):
+        """Test creating session shopping cart item"""
+        payload = {
+            'product': self.product.id,
+            'count': 2
+        }
+        res = self.client.post(SESSION_SHOPPING_URL, payload)
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+
+        item = models.SessionShoppingCart.objects.get(id = res.data['id'])
+        serializer = serializers.SessionShoppingSerializer(item)
+        self.assertEqual(res.data, serializer.data)
+
+    def test_partial_update_session_shopping_cart(self):
+        """Test partial update session shopping cart for count"""
+        item = sample_shopping_session_item(self.session_key, self.product)
+        payload = {
+            'count': 3
+        }
+        url = detail_url_session(shopping_id=item.id)
+        self.client.patch(url, payload)
+        item.refresh_from_db()
+        self.assertEqual(payload['count'], item.count)
+        
+    def test_deleting_session_shopping_cart(self):
+        """Test deleting session shopping cart"""
+        sample_shopping_session_item(self.session_key, self.product)
+        product2 = sample_product(self.user, self.category, title = 'Product 2')
+        item2 = sample_shopping_session_item(self.session_key, product2)
+        url = detail_url_session(shopping_id=item2.id)
+        self.client.delete(url)
+        items = models.SessionShoppingCart.objects.all().filter(id = item2.id)
+        self.assertEqual(len(items), 0)
 
 
 class TestPrivateShoppingCartApi(TestCase):

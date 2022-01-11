@@ -13,6 +13,8 @@ from django.conf import settings
 from django.db.models.deletion import CASCADE
 from django.db.models.fields.related import ForeignKey, ManyToManyField
 
+import product
+
 
 def uploaded_images_for_products(instance, filepath):
     """Generate new path for upoaded images to products"""
@@ -174,6 +176,17 @@ class UserDetails(models.Model):
         UserAddress,
         models.CASCADE,
     )
+
+
+class SessionShoppingCart(models.Model):
+    """Shopping cart for anonymous user"""
+    aUser = models.CharField(max_length=255)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    count = models.IntegerField(blank=False, validators=[MinValueValidator(1)])
+
+    def __str__(self):
+        """String representation of Session Shopping Cart"""
+        return f"{str(self.product)}, {self.count}"
 
 
 class ShoppingCart(models.Model):

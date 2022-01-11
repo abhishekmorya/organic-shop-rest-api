@@ -22,3 +22,22 @@ class ShoppingView(viewsets.ModelViewSet):
         if self.action == 'retrieve':
             return serializers.ShoppingDetailSerializer
         return self.serializer_class
+
+
+class SessionShoppingView(viewsets.ModelViewSet):
+    """Viewset for Session Shopping object"""
+    serializer_class = serializers.SessionShoppingSerializer
+    queryset = models.SessionShoppingCart.objects.all().order_by('id')
+
+    def perform_create(self, serializer):
+        session_key = self.request.session.session_key
+        return serializer.save(aUser = session_key)
+    
+    def get_queryset(self):
+        session_key = self.request.session.session_key
+        return self.queryset.filter(aUser = session_key)
+
+    def get_serializer_class(self):
+        if self.action == 'retrieve':
+            return serializers.SessionShoppingDetailSerializer
+        return self.serializer_class
