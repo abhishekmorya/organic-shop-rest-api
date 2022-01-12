@@ -218,6 +218,10 @@ class PaymentMode(models.Model):
 
 class Offer(models.Model):
     """Model for offer object"""
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
+    )
     title = models.CharField(max_length=255)
     percentage = models.FloatField(blank=False)
     desc = models.CharField(max_length=255)

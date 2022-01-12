@@ -236,6 +236,7 @@ class ModelTest(TestCase):
 
     def test_offer_str(self):
         """Test string representation of Offer object"""
+        user = sample_user()
         payload = {
             'title': 'Summer Season', 
             'percentage': 20.5,
@@ -243,7 +244,7 @@ class ModelTest(TestCase):
             'expiry_date': timezone.make_aware(datetime(2022, 6, 30, 23,59,59))
         }
 
-        offer = models.Offer.objects.create(**payload)
+        offer = models.Offer.objects.create(user = user, **payload)
         self.assertEqual(payload['title'], str(offer))
 
     def test_creating_order(self):
@@ -281,6 +282,7 @@ class ModelTest(TestCase):
         sc2 = models.ShoppingCart.objects.create(user = user, product = product2, count = 3)
         order.cartItems.add(sc1, sc2)
         offer = models.Offer.objects.create(
+            user = user,
             title = 'Summer Sale',
             percentage = 20.5,
             desc = 'Summer Sale 2022',
@@ -326,6 +328,7 @@ class ModelTest(TestCase):
         sc2 = models.ShoppingCart.objects.create(user = user, product = product2, count = 3)
         order.cartItems.add(sc1, sc2)
         offer = models.Offer.objects.create(
+            user = user,
             title = 'Summer Sale',
             percentage = 20.5,
             desc = 'Summer Sale 2022',
