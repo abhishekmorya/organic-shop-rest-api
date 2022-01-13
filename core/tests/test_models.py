@@ -225,13 +225,14 @@ class ModelTest(TestCase):
 
     def test_payment_mode_str(self):
         """Test string representation of Payment mode object"""
+        user = sample_user()
         payload = {
             'title': 'UPI',
             'desc': 'UPI payment',
             'charges': 2.2,
             'enabled': True
         }
-        paymentMode = models.PaymentMode.objects.create(**payload)
+        paymentMode = models.PaymentMode.objects.create(user = user, **payload)
         self.assertEqual(payload['title'], str(paymentMode))
 
     def test_offer_str(self):
@@ -252,6 +253,7 @@ class ModelTest(TestCase):
         user = sample_user()
         address = sample_address(user)
         payment_mode = models.PaymentMode.objects.create(
+            user = user,
             **{
                 'title': 'UPI',
                 'desc': 'UPI payment',
@@ -299,6 +301,7 @@ class ModelTest(TestCase):
         user = sample_user()
         address = sample_address(user)
         payment_mode = models.PaymentMode.objects.create(
+            user = user,
             **{
                 'title': 'UPI',
                 'desc': 'UPI payment',

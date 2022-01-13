@@ -13,3 +13,16 @@ class IsStaffOrReadOnly(permissions.BasePermission):
             request.user.is_authenticated and
             request.user.is_staff
         )
+
+
+class IsStaffOrAuthenticated(permissions.IsAuthenticated):
+    """
+    The request is authenticated as staff, or it is read only for normal users
+    Restricted for anonymous users
+    """
+    def has_permission(self, request, view):
+        return bool(
+            request.user and
+            request.user.is_authenticated and
+            (request.method in permissions.SAFE_METHODS or request.user.is_staff)
+        )

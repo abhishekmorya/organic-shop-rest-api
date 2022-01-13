@@ -206,10 +206,15 @@ class ShoppingCart(models.Model):
 
 class PaymentMode(models.Model):
     """Model for payment mode object"""
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
+    )
     title = models.CharField(max_length=100, unique=True)
     desc = models.CharField(max_length=255)
     charges = models.FloatField(validators=[MinValueValidator(0)])
     enabled = models.BooleanField(default=False)
+    created_on = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         """String reprentation of Payment Mode object"""
