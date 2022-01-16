@@ -8,6 +8,7 @@ app_name = 'order'
 router = DefaultRouter()
 
 router.register('paymentmode', views.PaymentModeView)
+router.register('order', views.OrderView)
 
 urlpatterns = [
     path('', include(router.urls)),

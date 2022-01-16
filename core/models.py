@@ -108,6 +108,10 @@ class UserAddress(models.Model):
     def __str__(self):
         return f'name: {self.name}, district: {self.district}, state: {self.state}, pincode: {self.pincode}'
 
+    def printable(self):
+        """Printable form of address"""
+        return f"{self.name}, {self.line1}, {self.line2}, {self.city}, {self.district}, {self.state}, {self.pincode}"
+
 
 class Category(models.Model):
     """Model for Category object"""
@@ -250,7 +254,7 @@ class Order(models.Model):
     ordered_on = models.DateTimeField(auto_now_add=True)
     shipping_address = models.CharField(max_length=255)
     billing_address = models.CharField(max_length=255)
-    payment_mode = models.ForeignKey(PaymentMode, on_delete = models.PROTECT)
+    payment_mode = models.ForeignKey(PaymentMode, on_delete=models.PROTECT)
 
 
 class PriceDetail(models.Model):
