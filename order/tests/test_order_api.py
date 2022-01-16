@@ -328,7 +328,5 @@ class TestAdminUserOrderApi(TestCase):
         order2.offers_applied.add(self.offer)
         res = self.client.get(ORDER_URL)
         orders = models.Order.objects.all().order_by('-id')
-        # print([o.user for o in res.data])
-        print(res.data)
         serializer = OrderSerializer(orders, many = True)
         self.assertEqual(res.data, serializer.data)
