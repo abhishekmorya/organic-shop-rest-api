@@ -1,10 +1,9 @@
-from django.core.exceptions import ValidationError
 from user.serializers import UserAddressSerializer
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 
-from rest_framework import serializers, status
+from rest_framework import status
 from rest_framework.test import APIClient
 
 from core.models import UserAddress
@@ -134,8 +133,7 @@ class PrivateUserAddressTests(TestCase):
         sample_address(user = self.user)
         address1 = sample_address(user=self.user, **payload)
         url = detail_url(address1.id)
-        res = self.client.delete(url)
-        # self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
+        self.client.delete(url)
         addresses = UserAddress.objects.all()
         serializer = UserAddressSerializer(addresses, many = True)
         self.assertEqual(len(serializer.data), 1)
@@ -149,7 +147,7 @@ class PrivateUserAddressTests(TestCase):
             'name': 'Abhishek',
             'city': 'Yamunanagar'
         }
-        res = self.client.patch(url, payload)
+        self.client.patch(url, payload)
         address.refresh_from_db()
         self.assertEqual(address.name, payload['name'])
         self.assertEqual(address.city, payload['city'])
@@ -170,7 +168,7 @@ class PrivateUserAddressTests(TestCase):
             'pincode': '123456',
             'addressType': 1
         }
-        res = self.client.put(url, payload)
+        self.client.put(url, payload)
         address.refresh_from_db()
 
         for key in payload.keys():

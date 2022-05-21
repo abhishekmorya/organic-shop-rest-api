@@ -1,6 +1,4 @@
-from django.db.models import fields
 from rest_framework.serializers import ModelSerializer
-from django.contrib.sessions.backends.db import SessionStore
 
 from core import models
 from product.serializers import ProductDetailSerializer

@@ -1,8 +1,6 @@
 from rest_framework import viewsets
 from rest_framework.authentication import TokenAuthentication
 
-from django.contrib.auth import get_user_model
-
 from core.models import Offer
 from offers import serializers
 from core import permissions

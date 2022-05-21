@@ -30,7 +30,7 @@ class OrderView(GenericViewSet,
     queryset = models.Order.objects.all().order_by('-id')
 
     def get_queryset(self):
-        if self.request.user.is_staff == False:
+        if not self.request.user.is_staff:
             return self.queryset.filter(user=self.request.user)
         return self.queryset
 

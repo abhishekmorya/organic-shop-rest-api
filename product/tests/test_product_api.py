@@ -1,15 +1,14 @@
-import tempfile, os
-from PIL import Image
+import os
+import tempfile
 
-from django.test import TestCase
+from core.models import Category, Product
 from django.contrib.auth import get_user_model
+from django.test import TestCase
 from django.urls import reverse
-
+from PIL import Image
+from product.serializers import ProductSerializer
 from rest_framework import status
 from rest_framework.test import APIClient
-
-from core.models import Product, Category
-from product.serializers import ProductSerializer
 
 PRODUCT_URL = reverse('product:product-list')
 

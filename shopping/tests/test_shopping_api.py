@@ -108,7 +108,7 @@ class TestPublicShoppingAPI(TestCase):
         session.create()
         session_key2 = session.session_key
         product2 = sample_product(self.user, self.category, title = 'Product2')
-        sample_shopping_session_item(session_key2, product2, count  = 1)
+        sample_shopping_session_item(session_key2, product2, count = 1)
 
         res = self.client.get(SESSION_SHOPPING_URL)
         self.assertEqual(res.status_code, status.HTTP_200_OK)

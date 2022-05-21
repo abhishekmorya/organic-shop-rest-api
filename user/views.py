@@ -39,7 +39,7 @@ class UserAddressView(viewsets.ModelViewSet):
     serializer_class = serializers.UserAddressSerializer
     authentication_classes = [authentication.TokenAuthentication,]
     permission_classes = [permissions.IsAuthenticated,]
-    queryset = UserAddress.objects.all()
+    queryset = UserAddress.objects.all().order_by('-id')
 
     def get_queryset(self):
         

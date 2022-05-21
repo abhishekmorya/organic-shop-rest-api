@@ -10,7 +10,6 @@ from core import permissions
 from core import models
 from product import serializers
 
-from PIL import Image
 
 def greet(request):
     """Greet message"""

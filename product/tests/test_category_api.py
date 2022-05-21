@@ -1,13 +1,11 @@
 from django.test import TestCase
-from django.contrib.auth import get_user_model, models
+from django.contrib.auth import get_user_model
 from django.urls import reverse
 
 from rest_framework import status
 from rest_framework.test import APIClient
-from rest_framework.serializers import ValidationError
 
 from core.models import Category
-from product import serializers
 from product.serializers import CategorySerializer
 
 CATE_URL = reverse('product:category-list')

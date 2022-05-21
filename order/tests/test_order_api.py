@@ -10,7 +10,6 @@ from datetime import datetime
 
 from core import models
 from order.serializers import OrderDetailSerializer, OrderSerializer
-from user.serializers import UserAddressSerializer
 
 
 ORDER_URL = reverse('order:order-list')

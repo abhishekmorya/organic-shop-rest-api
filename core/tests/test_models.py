@@ -134,9 +134,9 @@ class ModelTest(TestCase):
                 address.district,
                 address.state,
                 address.pincode
-            )
         )
-    
+        )
+
     def test_category_str(self):
         """Test the string representation of category object"""
         user = sample_user()
@@ -219,9 +219,9 @@ class ModelTest(TestCase):
             'count': 2
         }
         shoppingCart = models.ShoppingCart.objects.create(user = user, **payload)
-        count = models.ShoppingCart.objects.count()
+        models.ShoppingCart.objects.count()
         self.assertEqual(f"{str(product)}, {payload['count']}", str(shoppingCart))
-        
+
 
     def test_payment_mode_str(self):
         """Test string representation of Payment mode object"""
@@ -342,6 +342,6 @@ class ModelTest(TestCase):
             'order': order,
             'delievery_charges': 50.5
         }
-        
+
         models.PriceDetail.objects.create(user = user, **payload)
         self.assertEqual(1, models.PriceDetail.objects.count())
